@@ -1,0 +1,9 @@
+- System Volume Information/**
+- /VMs
+- *.iso
+- ~$*
+- *.tmp
+- *.lock
+- Thumbs.db
+- ~$*.*
+- *pagefile.sys
