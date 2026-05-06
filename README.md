@@ -1,5 +1,7 @@
 Obvsiouly this repo need a lot of improvement.
+
 Setup and check
+
 Este arquivo verifica se existe o cygwin, rsync e ssh instalado e no path correto. Caso existam, ele já criará o diretório do backup (c:\rclone) com os arquivos necessários ao backup. Em caso de não estarem satisfeitas esses pre requisitos, altere o sistema conforme pede o script, feche a janela do powershell e abra novamente para que os ajustes sejam carregados
 
 BackupOneDir.ps1
