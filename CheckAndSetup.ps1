@@ -11,11 +11,11 @@ if ($fail -eq 0){
     #The following line is for Windows 2012 and bellow (TLS1.2)
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     Write-Host ('Fazendo Download do arquivo BackupOne') -ForegroundColor Green
-    Invoke-WebRequest -URI https://github.com/MarceloRC/ScriptsPublic/blob/master/BackupOne.ps1?raw=True -OutFile $pathRclone/BackupOne.ps1
+    Invoke-WebRequest -URI https://github.com/MarceloRC/ScriptsPublic/blob/main/BackupOne.ps1?raw=True -OutFile $pathRclone/BackupOne.ps1
     Write-Host ('Fazendo Download do arquivo BackupAll') -ForegroundColor Green
-    Invoke-WebRequest -URI https://github.com/MarceloRC/ScriptsPublic/blob/master/BackupAll.ps1?raw=True -OutFile $pathRclone/BackupAll.ps1
+    Invoke-WebRequest -URI https://github.com/MarceloRC/ScriptsPublic/blob/main/BackupAll.ps1?raw=True -OutFile $pathRclone/BackupAll.ps1
     Write-Host ('Fazendo Download do arquivo Filters.txt') -ForegroundColor Green
-    Invoke-WebRequest -URI https://github.com/MarceloRC/ScriptsPublic/blob/master/filters.txt?raw=True -OutFile $pathRclone/filters.txt
+    Invoke-WebRequest -URI https://github.com/MarceloRC/ScriptsPublic/blob/main/filters.txt?raw=True -OutFile $pathRclone/filters.txt
     Write-Host ('Fazendo Download do Rclone para a pasta temporaria do sistema %TEMP%') -ForegroundColor Green
     Invoke-WebRequest -URI https://downloads.rclone.org/rclone-current-windows-amd64.zip -OutFile $Env:TEMP/rclone.zip
     Write-Host ('Descompactando o arquivo rclone.exe do download que foi executado') -ForegroundColor Green
