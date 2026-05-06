@@ -148,8 +148,7 @@ $taskSettings = New-ScheduledTaskSettingsSet `
     -ExecutionTimeLimit (New-TimeSpan -Hours 2) `
     -RestartCount 2 `
     -RestartInterval (New-TimeSpan -Minutes 5) `
-    -StartWhenAvailable `
-    -WakeToRun $false
+    -StartWhenAvailable
 
 try {
     Register-ScheduledTask `
