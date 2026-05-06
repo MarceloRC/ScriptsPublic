@@ -24,13 +24,15 @@ function Write-Log {
 }
 
 # Criar estrutura de pastas
-New-Item -ItemType Directory -Force -Path "$pathRclone\logs"         | Out-Null
-New-Item -ItemType Directory -Force -Path "$pathRclone\log-compactado" | Out-Null
+New-Item -ItemType Directory -Force -Path "$pathRclone\logs"            | Out-Null
+New-Item -ItemType Directory -Force -Path "$pathRclone\log-compactado"  | Out-Null
 
 Write-Log "===== RCLONE DEPLOY INICIADO =====" "Cyan"
 Write-Log "Computador: $env:COMPUTERNAME | Usuario: $env:USERNAME"
 
-# Downloads do GitHub
+# =========================
+# DOWNLOADS DO GITHUB
+# =========================
 $files = @{
     "BackupOne.ps1" = "$baseURL/BackupOne.ps1"
     "BackupAll.ps1" = "$baseURL/BackupAll.ps1"
@@ -48,11 +50,12 @@ foreach ($file in $files.GetEnumerator()) {
     }
 }
 
-# Download e extração do Rclone
+# =========================
+# DOWNLOAD E EXTRACAO DO RCLONE
+# =========================
 $rcloneZip = "$env:TEMP\rclone.zip"
-
-# Verifica se já existe uma versão instalada
 $rcloneExe = "$pathRclone\rclone.exe"
+
 if (Test-Path $rcloneExe) {
     $version = & "$rcloneExe" version 2>&1 | Select-Object -First 1
     Write-Log "Rclone ja instalado: $version — atualizando..." "Yellow"
@@ -79,7 +82,6 @@ try {
     exit 1
 }
 
-# Verificacao pos-install
 if (Test-Path $rcloneExe) {
     $version = & "$rcloneExe" version 2>&1 | Select-Object -First 1
     Write-Log "Rclone instalado com sucesso: $version" "Green"
@@ -88,5 +90,87 @@ if (Test-Path $rcloneExe) {
     exit 1
 }
 
+# =========================
+# TASK AGENDADA - BACKUP
+# =========================
+Write-Log "Configurando task de Backup..." "Cyan"
+
+# Capturar usuario logado atual (quem rodou o script como admin)
+# InteractiveLogon pega o usuario da sessao desktop ativa
+$loggedUser = (Get-CimInstance Win32_ComputerSystem).UserName
+
+if (-not $loggedUser) {
+    # Fallback: usuario que executou o script
+    $loggedUser = "$env:USERDOMAIN\$env:USERNAME"
+}
+
+Write-Log "Task sera criada para o usuario: $loggedUser" "Yellow"
+Write-Log "ATENCAO: o usuario precisar ter permissao para executar tarefas agendadas." "Yellow"
+
+# Perguntar quantas vezes por dia
+$vezes = Read-Host "Quantas vezes deseja rodar o backup por dia? (1 ou 2) [Padrao: 2x - 12:00 e 21:00]"
+
+$triggers = @()
+
+if ($vezes -eq "1") {
+    $hora = Read-Host "Digite o horario (ex: 14:00)"
+    $triggers += New-ScheduledTaskTrigger -Daily -At $hora
+    Write-Log "Backup agendado para: $hora"
+} else {
+    $alterarHorario = Read-Host "Usar horario padrao 12:00 e 21:00? (Y/N)"
+
+    if ($alterarHorario -match "^[Nn]$") {
+        $hora1 = Read-Host "Digite o primeiro horario (ex: 10:00)"
+        $hora2 = Read-Host "Digite o segundo horario (ex: 22:00)"
+        $triggers += New-ScheduledTaskTrigger -Daily -At $hora1
+        $triggers += New-ScheduledTaskTrigger -Daily -At $hora2
+        Write-Log "Backup agendado para: $hora1 e $hora2"
+    } else {
+        $triggers += New-ScheduledTaskTrigger -Daily -At "12:00"
+        $triggers += New-ScheduledTaskTrigger -Daily -At "21:00"
+        Write-Log "Backup agendado para horario padrao: 12:00 e 21:00"
+    }
+}
+
+$backupAction = New-ScheduledTaskAction `
+    -Execute "powershell.exe" `
+    -Argument "-NoProfile -ExecutionPolicy Bypass -File C:\rclone\BackupAll.ps1"
+
+# Principal identico ao configurado manualmente:
+# "Run whether user is logged on or not" + "Run with highest privileges"
+# LogonType S4U = roda com ou sem usuario logado, sem armazenar senha
+$backupPrincipal = New-ScheduledTaskPrincipal `
+    -UserId $loggedUser `
+    -LogonType S4U `
+    -RunLevel Highest
+
+$taskSettings = New-ScheduledTaskSettingsSet `
+    -ExecutionTimeLimit (New-TimeSpan -Hours 2) `
+    -RestartCount 2 `
+    -RestartInterval (New-TimeSpan -Minutes 5) `
+    -StartWhenAvailable `
+    -WakeToRun $false
+
+try {
+    Register-ScheduledTask `
+        -TaskName "Rclone-BackupAll" `
+        -Action $backupAction `
+        -Trigger $triggers `
+        -Principal $backupPrincipal `
+        -Settings $taskSettings `
+        -Force | Out-Null
+
+    Write-Log "Task 'Rclone-BackupAll' criada para usuario '$loggedUser' com privilegios altos." "Green"
+} catch {
+    Write-Log "ERRO ao criar task de backup: $($_.Exception.Message)" "Red"
+    Write-Log "Tente criar manualmente pelo Agendador de Tarefas do Windows." "Yellow"
+}
+
+# =========================
+# FINALIZACAO
+# =========================
 Write-Log "===== DEPLOY FINALIZADO =====" "Cyan"
 Write-Log "Log salvo em: $DeployLog"
+Write-Host ""
+Write-Host "RCLONE INSTALADO E CONFIGURADO" -ForegroundColor Green
+Write-Host "IMPORTANTE: Configure o rclone com 'rclone config' antes do primeiro backup." -ForegroundColor Yellow
