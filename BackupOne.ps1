@@ -95,6 +95,7 @@ try {
             --transfers $Transfers `
             --filter-from 'c:\rclone\filters.txt' `
             --fast-list `
+            --create-empty-src-dirs `
             --checkers 16 `
             --timeout 1h `
             --contimeout 30s `
