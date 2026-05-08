@@ -108,7 +108,7 @@ Write-Log "Task sera criada para o usuario: $loggedUser" "Yellow"
 Write-Log "ATENCAO: o usuario precisar ter permissao para executar tarefas agendadas." "Yellow"
 
 # Perguntar quantas vezes por dia
-$vezes = Read-Host "Quantas vezes deseja rodar o backup por dia? (1 ou 2) [Padrao: 2x - 12:00 e 21:00]"
+$vezes = Read-Host "Quantas vezes deseja rodar o backup por dia? (1 ou 2) [Padrao: 2x - 11:30 e 22:00]"
 
 $triggers = @()
 
@@ -117,7 +117,7 @@ if ($vezes -eq "1") {
     $triggers += New-ScheduledTaskTrigger -Daily -At $hora
     Write-Log "Backup agendado para: $hora"
 } else {
-    $alterarHorario = Read-Host "Usar horario padrao 12:00 e 21:00? (Y/N)"
+    $alterarHorario = Read-Host "Usar horario padrao 11:30 e 22:00? (Y/N)"
 
     if ($alterarHorario -match "^[Nn]$") {
         $hora1 = Read-Host "Digite o primeiro horario (ex: 10:00)"
@@ -126,9 +126,9 @@ if ($vezes -eq "1") {
         $triggers += New-ScheduledTaskTrigger -Daily -At $hora2
         Write-Log "Backup agendado para: $hora1 e $hora2"
     } else {
-        $triggers += New-ScheduledTaskTrigger -Daily -At "12:00"
-        $triggers += New-ScheduledTaskTrigger -Daily -At "21:00"
-        Write-Log "Backup agendado para horario padrao: 12:00 e 21:00"
+        $triggers += New-ScheduledTaskTrigger -Daily -At "11:30"
+        $triggers += New-ScheduledTaskTrigger -Daily -At "22:00"
+        Write-Log "Backup agendado para horario padrao: 11:30 e 22:00"
     }
 }
 
